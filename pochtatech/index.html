@@ -21,11 +21,12 @@ h1{color:#fff;text-shadow:0 4px 0 #2942BB,0 9px 28px #2942BB60}#result .star{col
 <div id="result" class="panel" hidden><div class="star" id="resulticon">✦</div><h2 id="resulttitle">Будущее — рядом!</h2><strong id="total"></strong><p id="summary"></p><button id="again" class="primary">Ещё один заезд →</button></div>
 <div id="loading"><div>Собираем город…<small>Ровер уже на старте</small></div></div>
 <script>
-(function(){let n=0;const urls=['https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js','https://cdn.jsdelivr.net/npm/three@0.156.1/build/three.min.js'];function load(){let s=document.createElement('script');s.src=urls[n++];s.onload=()=>{try{boot()}catch(e){document.getElementById('loading').textContent='Не удалось запустить 3D. Попробуй обновить страницу.';console.error(e)}};s.onerror=()=>n<urls.length?load():document.getElementById('loading').textContent='Не удалось загрузить игру. Проверь интернет и обнови страницу.';document.head.appendChild(s)}load();
+(function(){let n=0;const urls=['./assets/three.min.js','https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js','https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js'];function load(){let s=document.createElement('script');s.src=urls[n++];s.onload=()=>{try{boot()}catch(e){document.getElementById('loading').textContent='Не удалось запустить 3D. Попробуй обновить страницу.';console.error(e)}};s.onerror=()=>n<urls.length?load():document.getElementById('loading').textContent='Не удалось загрузить игру. Проверь интернет и обнови страницу.';document.head.appendChild(s)}load();
 function boot(){
 const T=THREE,$=id=>document.getElementById(id),LANES=[-3,0,3],TASK_COUNT=16,STATION_GAP=56,FINISH_Z=-70-(TASK_COUNT-1)*STATION_GAP-110,rand=(a,b)=>a+Math.random()*(b-a);let seed=243;const rng=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};const R=(a,b)=>a+rng()*(b-a);
 const scene=new T.Scene();scene.background=new T.Color('#9be2ed');scene.fog=new T.Fog('#a4e0e5',65,170);
-const camera=new T.PerspectiveCamera(62,innerWidth/innerHeight,.1,420);const renderer=new T.WebGLRenderer({antialias:devicePixelRatio<2,alpha:false,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.outputEncoding=T.sRGBEncoding;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.18;$('world').appendChild(renderer.domElement);
+function createRenderer(){try{return new T.WebGLRenderer({antialias:devicePixelRatio<2,alpha:false,powerPreference:'default'})}catch(firstError){return new T.WebGLRenderer({antialias:false,alpha:false,powerPreference:'low-power'})}}
+const camera=new T.PerspectiveCamera(62,innerWidth/innerHeight,.1,420);const renderer=createRenderer();renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.outputEncoding=T.sRGBEncoding;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.18;$('world').appendChild(renderer.domElement);
 scene.add(new T.HemisphereLight('#c1eaff','#56659b',.95));const sun=new T.DirectionalLight('#ffdfaa',1.65);sun.position.set(-35,65,20);scene.add(sun);const rim=new T.DirectionalLight('#8dcfff',.65);rim.position.set(30,20,-60);scene.add(rim);
 const mats={};function mat(c,rough=.8,metal=0){const key=c+rough+metal;return mats[key]||(mats[key]=new T.MeshStandardMaterial({color:c,roughness:rough,metalness:metal}))}
 const boxgeo=new T.BoxGeometry(1,1,1),sphere=new T.SphereGeometry(1,10,7),cyl=new T.CylinderGeometry(1,1,1,12),cone=new T.ConeGeometry(1,1,12);const batches=new Map();let temp=new T.Object3D();
@@ -61,11 +62,31 @@ for(let i=0;i<35;i++){let z=R(FINISH_Z-138,70),x=(i%2?1:-1)*R(60,120);O('#73b895
 const clouds=new T.Group();scene.add(clouds);for(let i=0;i<20;i++){let x=R(-150,150),y=R(35,65),z=R(-260,70);for(let k=0;k<5;k++){let o=mesh(sphere,mat('#fff9e8'),x+k*4,y+Math.sin(k)*2,z,clouds);o.scale.set(6,3+Math.sin(k)*2,4)}}
 mergeStatic(clouds);
 // University: cantilever, glass ground floor and sloping golden louvers.
-const campus=new T.Group();campus.position.set(7,0,FINISH_Z-72);campus.rotation.y=.5;campus.scale.setScalar(1.22);scene.add(campus);
-rb(43,.6,21,'#e9d7ad',0,.25,0,campus);rb(40,4,15,'#478b9c',0,2.7,0,campus);rb(43,.7,18,'#ffe0a0',0,11,0,campus);
-const shape=new T.Shape();shape.moveTo(-21,4);shape.lineTo(21,6);shape.lineTo(21,11);shape.lineTo(-21,11);shape.closePath();let cg=new T.ExtrudeGeometry(shape,{depth:17,bevelEnabled:false});cg.translate(0,0,-8.5);mesh(cg,mat('#c58a3a'),0,0,0,campus);
-for(let i=0;i<65;i++){let x=-21+i*.66,h=6.5-(x+21)/42*2;let o=mesh(boxgeo,mat(i%3?'#efb959':'#d89e48'),x,11-h/2,8.8+Math.sin(i*.095)*.35,campus);o.scale.set(.19,h,.55)}
-for(let i=-19;i<=19;i+=2){let o=mesh(boxgeo,mat('#d3ded1'),i,2.7,7.7,campus);o.scale.set(.09,4,.1)}
+const campus=new T.Group();campus.position.set(7,0,FINISH_Z-72);campus.rotation.y=.22;campus.scale.setScalar(1.22);scene.add(campus);
+// Postal logistics centre, based on the supplied building references.
+rb(46,.55,23,'#dce3eb',0,.25,0,campus);
+rb(44,10,20,'#f4f6fb',0,5.3,0,campus);
+rb(44.3,.35,20.3,'#d3dbea',0,10.5,0,campus);
+rb(44,3.3,.18,'#526171',0,1.98,10.08,campus);
+for(let x=-21;x<=21;x+=3){rb(.035,9.6,.03,'#d1d9e4',x,5.2,10.12,campus)}
+const stripeShape=new T.Shape();stripeShape.moveTo(-.8,-.55);stripeShape.lineTo(.15,-.55);stripeShape.lineTo(.9,.55);stripeShape.lineTo(-.05,.55);stripeShape.closePath();
+const stripeGeo=new T.ShapeGeometry(stripeShape),stripeMat=new T.MeshBasicMaterial({color:'#2942BB',side:T.DoubleSide});
+for(let x=-20.5;x<21;x+=2.2)mesh(stripeGeo,stripeMat,x,9.5,10.14,campus);
+for(let side of [-1,1])for(let z=-8.5;z<10;z+=2.2){let stripe=mesh(stripeGeo,stripeMat,side*22.04,9.5,z,campus);stripe.rotation.y=side*Math.PI/2}
+for(let x=-19;x<=19;x+=3.8){
+ rb(2.65,1.65,.12,'#ffffff',x,6.9,10.17,campus);
+ rb(2.35,1.38,.1,'#3D95F7',x,6.9,10.25,campus);
+ rb(.06,1.42,.06,'#ffffff',x,6.9,10.32,campus);
+}
+for(let x=-18;x<=18;x+=6){
+ rb(3.85,3.15,.38,'#273444',x,2.05,10.24,campus);
+ rb(3.25,2.7,.16,'#a8bacb',x,2.1,10.46,campus);
+ for(let y=1;y<3.4;y+=.45)rb(3.15,.035,.035,'#74899d',x,y,10.56,campus);
+ rb(4.1,.28,1.3,'#536476',x,.5,10.8,campus);
+ for(let sign of [-1,1])rb(.16,1.15,.16,'#ED8B00',x+sign*2.15,.85,11.35,campus);
+}
+rb(17,2.1,.35,'#ffffff',0,11.65,8.9,campus);
+mesh(new T.PlaneGeometry(16.5,1.7),new T.MeshBasicMaterial({map:textTex('ПОЧТА РОССИИ','#ffffff','#2942BB',1024,128,800)}),0,11.65,9.09,campus);
 function textTex(txt,bg='#173d54',fg='#fff4ca',w=512,h=128,weight=900){return texture((ctx)=>{ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);ctx.fillStyle=fg;ctx.font=weight+' '+Math.floor(h*.54)+'px Onest,Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,w/2,h/2,w*.93)},w,h)}
 B('#e8d4ac',7,.07,FINISH_Z-25,60,.2,84);for(let i=0;i<5;i++){B('#f1deba',7,.16+i*.12,FINISH_Z-49-i*1.2,36,.22,1.2)}for(let x of [-18,-13,-8,18,23,28]){C('#e7eee5',x,4.5,FINISH_Z-53,.07,9);B('#2942BB',x+.5,8,FINISH_Z-53,1,.65,.03);tree(x,FINISH_Z-37,1.15)}
 mergeStatic(campus);
